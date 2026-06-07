@@ -5,7 +5,7 @@ import redis from '../redis';
 const router: Router = Router();
 
 router.get('/', async (_req: Request, res: Response) => {
-    const health = {
+    const health: any = {
         uptime: process.uptime(),
         timestamp: Date.now(),
         postgres: 'down',
@@ -17,12 +17,16 @@ router.get('/', async (_req: Request, res: Response) => {
         health.postgres = 'up';
     } catch (e) { }
 
-    try {
-        await redis.ping();
-        health.redis = 'up';
-    } catch (e) { }
+    if (redis) {
+        try {
+            await redis.ping();
+            health.redis = 'up';
+        } catch (e) { }
+    } else {
+        health.redis = 'not configured';
+    }
 
-    const allUp = health.postgres === 'up' && health.redis === 'up';
+    const allUp = health.postgres === 'up' && (redis ? health.redis === 'up' : true);
     res.status(allUp ? 200 : 503).json(health);
 });
 
