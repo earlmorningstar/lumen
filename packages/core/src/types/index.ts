@@ -1,43 +1,60 @@
-// ---- User & Auth ----
-export interface User {
-    id: string;
-    email: string;
-    displayName: string;
-    avatarUrl: string | null;
-    createdAt: string;
-    updatedAt: string;
+// Enums
+export enum ContentType {
+    Movie = 'movie',
+    Series = 'series',
 }
 
-export interface AuthTokens {
-    accessToken: string;
-    refreshToken: string; // used for cookie setting logic
+export enum ContentRating {
+    G = 'G',
+    PG = 'PG',
+    PG13 = 'PG-13',
+    R = 'R',
+    NC17 = 'NC-17',
 }
 
-export interface LoginPayload {
-    email: string;
-    password: string;
+export enum Genre {
+    Action = 'action',
+    Comedy = 'comedy',
+    Drama = 'drama',
+    Horror = 'horror',
+    SciFi = 'sci-fi',
+    Thriller = 'thriller',
+    Documentary = 'documentary',
+    Animation = 'animation',
+    Romance = 'romance',
 }
 
-export interface RegisterPayload extends LoginPayload {
-    displayName: string;
+export enum AnalyticsEventType {
+    SessionStart = 'session_start',
+    VideoStart = 'video_start',
+    VideoProgress = 'video_progress',
+    VideoComplete = 'video_complete',
+    ContentImpression = 'content_impression',
+    SearchQuery = 'search_query',
+    WatchlistAdd = 'watchlist_add',
 }
 
-// ---- Content ----
-export type ContentType = 'movie' | 'series';
+export enum RequestStatus {
+    Idle = 'idle',
+    Loading = 'loading',
+    Success = 'success',
+    Error = 'error',
+}
 
+// Content
 export interface Content {
     id: string;
     title: string;
     description: string;
     type: ContentType;
-    genre: string[];
+    genre: Genre[];
     tags: string[];
     releaseYear: number;
     durationSec: number;
-    rating: number; // average rating 0-10
+    rating: number; // 0-10 average
     thumbnailUrl: string;
     backdropUrl: string;
-    hlsUrl: string | null; // movie direct; series may have episodes
+    hlsUrl: string | null;
     isFeatured: boolean;
 }
 
@@ -52,8 +69,43 @@ export interface Episode {
     thumbnailUrl: string;
 }
 
-// ---- Watch & User Data ----
-export interface WatchHistoryEntry {
+export interface ContentWithProgress extends Content {
+    progressSec: number;
+    completed: boolean;
+    lastWatched: string;
+}
+
+// User 
+export interface User {
+    id: string;
+    email: string;
+    displayName: string;
+    avatarUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface UserSession {
+    id: string;
+    userId: string;
+    refreshToken: string;
+    expiresAt: string;
+}
+
+export interface UserPreferences {
+    userId: string;
+    preferredGenres: Genre[];
+    preferredTags: string[];
+}
+
+export interface UserPreferenceVector {
+    userId: string;
+    genreWeights: Record<string, number>;
+    tagWeights: Record<string, number>;
+}
+
+// Interactions
+export interface WatchHistory {
     id: string;
     userId: string;
     contentId: string;
@@ -75,30 +127,59 @@ export interface UserRating {
     rating: number; // 1-10
 }
 
-export interface UserPreferenceVector {
-    userId: string;
-    genreWeights: Record<string, number>;
-    tagWeights: Record<string, number>;
-}
-
-// ---- Analytics ----
-export type AnalyticsEventType =
-    | 'session_start'
-    | 'video_start'
-    | 'video_progress'
-    | 'video_complete'
-    | 'content_impression'
-    | 'search_query'
-    | 'watchlist_add';
-
-export interface AnalyticsEvent {
+// Analytics
+export interface AnalyticsEventBase {
     type: AnalyticsEventType;
     userId?: string;
     sessionId: string;
-    contentId?: string;
-    properties?: Record<string, unknown>;
-    timestamp: number; // client-side epoch ms
+    timestamp: number; // epoch ms
 }
+
+export interface SessionEvent extends AnalyticsEventBase {
+    type: AnalyticsEventType.SessionStart;
+    properties: { device: string; os: string; };
+}
+
+export interface VideoProgressEvent extends AnalyticsEventBase {
+    type: AnalyticsEventType.VideoProgress;
+    contentId: string;
+    properties: {
+        progressSec: number;
+        durationSec: number;
+        bufferedSec: number;
+        quality: string;
+    };
+}
+
+export interface VideoCompleteEvent extends AnalyticsEventBase {
+    type: AnalyticsEventType.VideoComplete;
+    contentId: string;
+    properties: { totalWatchSec: number; };
+}
+
+export interface ContentImpressionEvent extends AnalyticsEventBase {
+    type: AnalyticsEventType.ContentImpression;
+    contentId: string;
+    properties: { position: number; row: string; };
+}
+
+export interface SearchEvent extends AnalyticsEventBase {
+    type: AnalyticsEventType.SearchQuery;
+    properties: { query: string; resultCount: number; };
+}
+
+export interface WatchlistAddEvent extends AnalyticsEventBase {
+    type: AnalyticsEventType.WatchlistAdd;
+    contentId: string;
+}
+
+export type AnalyticsEvent =
+    | SessionEvent
+    | VideoProgressEvent
+    | VideoCompleteEvent
+    | ContentImpressionEvent
+    | SearchEvent
+    | WatchlistAddEvent;
 
 export interface AnalyticsContentMetrics {
     contentId: string;
@@ -108,23 +189,93 @@ export interface AnalyticsContentMetrics {
     avgWatchPct: number;
 }
 
-// ---- Player ----
+// Recommendations
+export interface ContentFeatureVector {
+    contentId: string;
+    genreVector: number[];
+    tagVector: number[];
+}
+
+export interface RecommendationScore {
+    contentId: string;
+    score: number;
+}
+
+// Player
 export interface PlayerState {
     isPlaying: boolean;
     currentTime: number;
     duration: number;
-    buffered: TimeRanges | null;
+    buffered: number;
     volume: number;
     muted: boolean;
     playbackRate: number;
-    qualityLevel: number; // index in quality levels
+    qualityLevel: number; // index
     isFullscreen: boolean;
     isMiniPlayer: boolean;
 }
 
-// ---- API ----
-export interface PaginatedResponse<T> {
-    data: T[];
+export interface QualityLevel {
+    label: string;
+    height: number;
+    bitrate: number;
+    width: number;
+}
+
+export interface PlaybackSpeed {
+    label: string;
+    rate: number;
+}
+
+export interface PlayerConfig {
+    autoPlay: boolean;
+    muted: boolean;
+    defaultQuality: number;
+    bufferedGoalSec: number;
+}
+
+export interface BufferState {
+    start: number;
+    end: number;
+}
+
+export type PlayerEvent =
+    | { type: 'play' }
+    | { type: 'pause' }
+    | { type: 'seek'; to: number }
+    | { type: 'volumechange'; volume: number }
+    | { type: 'ratechange'; rate: number }
+    | { type: 'qualitychange'; level: number }
+    | { type: 'fullscreenchange'; fullscreen: boolean };
+
+// Experiments
+export interface Experiment {
+    id: string;
+    name: string;
+    variants: ExperimentVariant[];
+    isActive: boolean;
+}
+
+export interface ExperimentVariant {
+    id: string;
+    name: string;
+    config: Record<string, unknown>;
+}
+
+export interface ExperimentAssignment {
+    userId: string;
+    experimentId: string;
+    variantId: string;
+}
+
+// API
+export interface ApiResponse<T> {
+    data: T;
+    message?: string;
+    status: number;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     total: number;
     page: number;
     pageSize: number;

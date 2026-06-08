@@ -1,19 +1,23 @@
 {
   "name": "lumen",
   "private": true,
+  "packageManager": "pnpm@11.5.2",
   "type": "module",
   "scripts": {
+    "dev": "turbo run dev",
     "dev:web": "pnpm --filter web dev",
     "dev:backend": "pnpm --filter backend dev",
+    "build": "turbo run build",
     "build:web": "pnpm --filter web build",
     "build:backend": "pnpm --filter backend build",
-    "build:core": "pnpm --filter core build",
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean"
   },
   "devDependencies": {
     "eslint": "^10.4.1",
     "prettier": "^3.8.3",
+    "turbo": "^2.9.16",
     "typescript": "^6.0.3"
   }
 }
