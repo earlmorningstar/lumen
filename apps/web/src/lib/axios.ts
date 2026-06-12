@@ -1,4 +1,14 @@
-import { createApiClient } from '@lumen/core';
-import { env } from '@/env';
+import { initApiClient, getApiClient } from '@lumen/core';
+import { useAuthStore } from '@/lib/stores';
+import { env } from '@/lib/env';
 
-export const apiClient = createApiClient(env.API_BASE_URL);
+const authStore = {
+    getAccessToken: () => useAuthStore.getState().accessToken,
+    setAccessToken: (token: string) => useAuthStore.getState().setAccessToken(token),
+    refreshToken: () => useAuthStore.getState().refreshToken(),
+    logout: () => useAuthStore.getState().logout(),
+};
+
+initApiClient(env.API_URL, authStore);
+
+export const apiClient = getApiClient();

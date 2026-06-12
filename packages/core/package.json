@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-     "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "build": "tsc"
   },
   "keywords": [],
@@ -12,6 +12,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@tanstack/react-query": "^5.101.0",
     "axios": "^1.17.0",
     "zustand": "^5.0.14"
   }

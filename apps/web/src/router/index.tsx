@@ -14,6 +14,7 @@ import {
     SearchPage,
     ProfilePage,
     WatchlistPage,
+    DevTestPage,
 } from '@/pages/lazy';
 import { ROUTES } from './routes';
 
@@ -22,6 +23,16 @@ const router = createBrowserRouter([
         element: <RootLayout />,
         errorElement: <RouteErrorPage />,
         children: [
+            // Public dev-test route (no auth required)
+            {
+                path: '/dev-test',
+                element: (
+                    <SuspensePage variant="page">
+                        <DevTestPage />
+                    </SuspensePage>
+                ),
+            },
+            // Protected app routes
             {
                 element: (
                     <ProtectedRoute>
@@ -71,6 +82,7 @@ const router = createBrowserRouter([
                     },
                 ],
             },
+            // Auth routes
             {
                 element: (
                     <PublicOnlyRoute>
@@ -82,6 +94,7 @@ const router = createBrowserRouter([
                     { path: ROUTES.AUTH.REGISTER, element: <AuthPage /> },
                 ],
             },
+            // 404
             {
                 path: ROUTES.NOT_FOUND,
                 element: <NotFoundPage />,

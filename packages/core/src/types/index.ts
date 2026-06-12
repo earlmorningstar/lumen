@@ -1,3 +1,11 @@
+export { };
+
+declare global {
+    interface Window {
+        __LUMEN_ACCESS_TOKEN__?: string | null;
+    }
+}
+
 // Enums
 export enum ContentType {
     Movie = 'movie',
@@ -276,9 +284,12 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-    total: number;
-    page: number;
-    pageSize: number;
+    pagination: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    };
 }
 
 export interface ApiError {

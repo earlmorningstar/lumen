@@ -3,7 +3,8 @@ import { asyncHandler } from '../../utils/asyncHandler';
 import * as contentService from './content.service';
 
 export const list = asyncHandler(async (req: Request, res: Response) => {
-    const data = await contentService.list(req.query);
+    const params = req.validatedQuery || req.query;
+    const data = await contentService.list(params);
     res.json(data);
 });
 
@@ -13,7 +14,7 @@ export const getFeatured = asyncHandler(async (_req: Request, res: Response) => 
 });
 
 export const getById = asyncHandler(async (req: Request, res: Response) => {
-    const id = req.params.id as string;  // string ensured by validation middleware
+    const id = req.params.id as string;
     const data = await contentService.getById(id);
     res.json({ data });
 });

@@ -1,15 +1,11 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { STALE_TIMES, GC_TIMES } from '@lumen/core';
 import { env } from '@/lib/env';
+import { useAuthStore } from '@/lib/stores';
 
-// Custom error handler
-const onError = (error: unknown) => {
-    if (env.APP_ENV === 'development') {
-        console.error('[React Query Error]', error);
-    }
-    // In production, I'll be sending to Sentry or other logger
-    // Sentry.captureException(error);
-};
+function isAxiosError(error: unknown): error is { response?: { status?: number } } {
+    return typeof error === 'object' && error !== null && 'response' in error;
+}
 
 export const queryClient = new QueryClient({
     defaultOptions: {
@@ -17,14 +13,8 @@ export const queryClient = new QueryClient({
             staleTime: STALE_TIMES.CONTENT_FEED,
             gcTime: GC_TIMES.DEFAULT,
             retry: (failureCount: number, error: unknown) => {
-                // Don't retry on 401 or 404 (Axios error shape check)
-                if (
-                    error !== null &&
-                    typeof error === 'object' &&
-                    'response' in error
-                ) {
-                    const err = error as { response?: { status?: number } };
-                    if (err.response?.status === 401 || err.response?.status === 404) {
+                if (isAxiosError(error)) {
+                    if (error.response?.status === 401 || error.response?.status === 404) {
                         return false;
                     }
                 }
@@ -35,14 +25,26 @@ export const queryClient = new QueryClient({
             refetchOnReconnect: true,
         },
         mutations: {
-            onError,
-            retry: 0,
+            onError: (error: unknown) => {
+                if (env.APP_ENV === 'development') {
+                    console.error('[React Query Error]', error);
+                }
+            },
         },
     },
     queryCache: new QueryCache({
-        onError,
+        onError: (error: unknown) => {
+            if (isAxiosError(error) && error.response?.status === 401) {
+                const authStore = useAuthStore.getState();
+                authStore.refreshToken().then((success) => {
+                    if (!success) authStore.logout();
+                });
+            }
+        },
     }),
     mutationCache: new MutationCache({
-        onError,
+        onError: (error: unknown) => {
+            if (env.APP_ENV === 'development') console.error('[Mutation Error]', error);
+        },
     }),
 });
