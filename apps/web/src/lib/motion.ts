@@ -30,6 +30,11 @@ export const pageTransition: Variants = shouldReduceMotion()
         exit: { opacity: 0, y: -8 },
     };
 
+export const fadeIn: Variants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+};
+
 export const cardHover: Variants = shouldReduceMotion()
     ? onlyFade
     : {
