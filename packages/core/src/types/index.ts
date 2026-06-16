@@ -59,7 +59,7 @@ export interface Content {
     tags: string[];
     releaseYear: number;
     durationSec: number;
-    rating: number; // 0-10 average
+    rating: string; // 0-10 average
     thumbnailUrl: string;
     backdropUrl: string;
     hlsUrl: string | null;

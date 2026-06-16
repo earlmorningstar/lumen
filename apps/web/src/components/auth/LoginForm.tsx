@@ -8,8 +8,12 @@ interface LocationState {
     from?: string;
 }
 
-export function LoginForm() {
-    const [email, setEmail] = useState('');
+interface LoginFormProps {
+    prefillEmail?: string;
+}
+
+export function LoginForm({ prefillEmail }: LoginFormProps) {
+    const [email, setEmail] = useState(prefillEmail);
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});

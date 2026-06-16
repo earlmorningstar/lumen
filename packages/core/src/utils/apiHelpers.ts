@@ -38,3 +38,25 @@ export function handleApiError(error: unknown): ApiError {
     }
     return { message: 'An unexpected error occurred', statusCode: 500 };
 }
+
+export function mapContent(raw: any): Content {
+    return {
+        id: raw.id,
+        title: raw.title,
+        description: raw.description,
+        type: raw.type,
+        genre: raw.genre ?? [],
+        tags: raw.tags ?? [],
+        releaseYear: raw.release_year,
+        durationSec: raw.duration_sec,
+        rating: raw.rating,
+        thumbnailUrl: raw.thumbnail_url,
+        backdropUrl: raw.backdrop_url,
+        hlsUrl: raw.hls_url,
+        isFeatured: raw.is_featured,
+    };
+}
+
+export function mapContentList(list: any[]): Content[] {
+    return list.map(mapContent);
+}

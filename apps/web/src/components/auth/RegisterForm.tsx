@@ -4,9 +4,6 @@ import { Button, Input } from '@/components/ui';
 import { useAuthStore } from '@/lib/stores';
 import { ROUTES } from '@/router/routes';
 
-interface LocationState {
-    from?: string;
-}
 
 const strengthChecks = [
     { test: (p: string) => p.length >= 8, label: '8+ characters' },
@@ -15,8 +12,12 @@ const strengthChecks = [
     { test: (p: string) => /[^A-Za-z0-9]/.test(p), label: 'Special character' },
 ];
 
+interface LocationState {
+    from?: string;
+}
+
 interface RegisterFormProps {
-    onSwitchToLogin: () => void;
+    onSwitchToLogin: (email: string) => void;
 }
 
 export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
@@ -110,7 +111,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                     <button
                         type="button"
                         className="text-accent underline"
-                        onClick={onSwitchToLogin}
+                        onClick={() => onSwitchToLogin(email)}
                     >
                         Sign in instead?
                     </button>

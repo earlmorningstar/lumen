@@ -4,7 +4,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { useAuthStore } from '@/lib/stores';
-// import { queryClient } from '@/lib/queryClient';
 import router from '@/router';
 import './styles/globals.css';
 
