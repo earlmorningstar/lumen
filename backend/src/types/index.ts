@@ -35,3 +35,12 @@ export interface Episode {
     hls_url: string;
     thumbnail_url: string;
 }
+
+export interface UserSession {
+    id: string;
+    user_id: string;
+    refresh_token: string;
+    expires_at: string;
+    family: string;
+    created_at: string;
+}

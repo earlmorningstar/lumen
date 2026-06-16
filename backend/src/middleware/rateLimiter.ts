@@ -11,10 +11,13 @@ const store = env.NODE_ENV === 'production'
     })
     : undefined;
 
+const authMax = env.NODE_ENV === 'production' ? 10 : 100;
+const authWindowMs = env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 60 * 1000;
+
 export const authLimiter = rateLimit({
     store,
-    windowMs: 15 * 60 * 1000,
-    max: 10,
+    windowMs: authWindowMs,
+    max: authMax,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (_req, _res) => {

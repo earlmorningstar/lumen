@@ -1,12 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { login as apiLogin, register as apiRegister, logout as apiLogout, refreshToken as apiRefreshToken } from '@lumen/core';
+import { queryClient } from '@/lib/queryClient';
 import type { User } from '@lumen/core';
-import {
-    login as apiLogin,
-    register as apiRegister,
-    logout as apiLogout,
-    refreshToken as apiRefreshToken,
-} from '@lumen/core';
 
 // - Auth Store -
 
@@ -32,20 +28,25 @@ export const useAuthStore = create<AuthState>()(
             accessToken: null,
             isLoading: true,
             error: null,
-
-            get isAuthenticated() {
-                return !!get().user && !!get().accessToken;
-            },
+            isAuthenticated: false,
 
             login: async (email, password) => {
                 set({ error: null });
                 try {
                     const data = await apiLogin(email, password);
-                    set({ user: data.user, accessToken: data.accessToken, isLoading: false, error: null });
+                    const user: User = {
+                        id: data.user.id,
+                        email: data.user.email,
+                        displayName: data.user.displayName,
+                        avatarUrl: data.user.avatarUrl,
+                        createdAt: '',
+                        updatedAt: '',
+                    };
+                    set({ user, accessToken: data.accessToken, isAuthenticated: true, isLoading: false, error: null });
                     window.__LUMEN_ACCESS_TOKEN__ = data.accessToken;
                 } catch (err) {
                     const message = err instanceof Error ? err.message : 'Login failed';
-                    set({ error: message, isLoading: false });
+                    set({ error: message, isLoading: false, isAuthenticated: false });
                     throw err;
                 }
             },
@@ -54,11 +55,19 @@ export const useAuthStore = create<AuthState>()(
                 set({ error: null });
                 try {
                     const data = await apiRegister(email, password, displayName);
-                    set({ user: data.user, accessToken: data.accessToken, isLoading: false, error: null });
+                    const user: User = {
+                        id: data.user.id,
+                        email: data.user.email,
+                        displayName: data.user.displayName,
+                        avatarUrl: data.user.avatarUrl,
+                        createdAt: '',
+                        updatedAt: '',
+                    };
+                    set({ user, accessToken: data.accessToken, isAuthenticated: true, isLoading: false, error: null });
                     window.__LUMEN_ACCESS_TOKEN__ = data.accessToken;
                 } catch (err) {
                     const message = err instanceof Error ? err.message : 'Registration failed';
-                    set({ error: message, isLoading: false });
+                    set({ error: message, isLoading: false, isAuthenticated: false });
                     throw err;
                 }
             },
@@ -66,41 +75,46 @@ export const useAuthStore = create<AuthState>()(
             logout: async () => {
                 try {
                     await apiLogout();
+                    queryClient.clear();
                 } finally {
-                    set({ user: null, accessToken: null, isLoading: false, error: null });
+                    set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false, error: null });
                     window.__LUMEN_ACCESS_TOKEN__ = null;
+                    useAuthStore.persist.clearStorage();
                 }
             },
 
             refreshToken: async () => {
                 try {
                     const data = await apiRefreshToken();
-                    set({ accessToken: data.accessToken });
+                    set({ accessToken: data.accessToken, isAuthenticated: true });
                     window.__LUMEN_ACCESS_TOKEN__ = data.accessToken;
                     return true;
                 } catch {
-                    set({ user: null, accessToken: null, error: null });
+                    set({ user: null, accessToken: null, isAuthenticated: false, error: null });
                     window.__LUMEN_ACCESS_TOKEN__ = null;
                     return false;
                 }
             },
 
             initializeAuth: async () => {
-                const currentUser = get().user;
-                if (!currentUser) {
-                    set({ isLoading: false });
+                const persistedUser = get().user;
+                if (!persistedUser) {
+                    set({ isLoading: false, isAuthenticated: false });
                     return;
                 }
                 const success = await get().refreshToken();
                 if (!success) {
-                    set({ user: null });
+                    set({ user: null, isAuthenticated: false });
+                    useAuthStore.persist.clearStorage();
+                } else {
+                    set({ isAuthenticated: true });
                 }
                 set({ isLoading: false });
             },
 
-            setUser: (user) => set({ user }),
+            setUser: (user) => set({ user, isAuthenticated: !!user && !!get().accessToken }),
             setAccessToken: (token) => {
-                set({ accessToken: token });
+                set({ accessToken: token, isAuthenticated: !!get().user && !!token });
                 window.__LUMEN_ACCESS_TOKEN__ = token;
             },
         }),
@@ -112,7 +126,7 @@ export const useAuthStore = create<AuthState>()(
     )
 );
 
-// -- UI Store --
+// - UI Store -
 
 interface Toast {
     id: string;
@@ -123,12 +137,20 @@ interface Toast {
 
 interface UIState {
     toasts: Toast[];
+    isSearchOpen: boolean;
+    activeModal: string | null;
     addToast: (toast: Omit<Toast, 'id'>) => void;
     removeToast: (id: string) => void;
+    toggleSearch: () => void;
+    setSearchOpen: (open: boolean) => void;
+    openModal: (modalId: string) => void;
+    closeModal: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
     toasts: [],
+    isSearchOpen: false,
+    activeModal: null,
     addToast: (toast) =>
         set((state) => ({
             toasts: [...state.toasts, { id: Date.now().toString(), ...toast }],
@@ -137,4 +159,8 @@ export const useUIStore = create<UIState>((set) => ({
         set((state) => ({
             toasts: state.toasts.filter((t) => t.id !== id),
         })),
+    toggleSearch: () => set((state) => ({ isSearchOpen: !state.isSearchOpen })),
+    setSearchOpen: (open) => set({ isSearchOpen: open }),
+    openModal: (modalId) => set({ activeModal: modalId }),
+    closeModal: () => set({ activeModal: null }),
 }));
