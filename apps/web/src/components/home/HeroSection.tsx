@@ -15,6 +15,7 @@ interface HeroSectionProps {
 export function HeroSection({ featured }: HeroSectionProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [animKey, setAnimKey] = useState(0);
     const navigate = useNavigate();
     const { isInWatchlist, toggleWatchlist } = useWatchlist();
 
@@ -24,12 +25,14 @@ export function HeroSection({ featured }: HeroSectionProps) {
         if (isPaused || featured.length <= 1) return;
         const timer = setInterval(() => {
             setCurrentIndex((prev) => (prev + 1) % featured.length);
+            setAnimKey((prev) => prev + 1);
         }, 6000);
         return () => clearInterval(timer);
     }, [isPaused, featured.length]);
 
     const goTo = useCallback((index: number) => {
         setCurrentIndex(index);
+        setAnimKey((prev) => prev + 1);
     }, []);
 
     if (!current) return null;
@@ -40,7 +43,6 @@ export function HeroSection({ featured }: HeroSectionProps) {
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
-            {/* Backdrop crossfade */}
             <AnimatePresence>
                 <motion.img
                     key={current.id}
@@ -55,12 +57,10 @@ export function HeroSection({ featured }: HeroSectionProps) {
                 />
             </AnimatePresence>
 
-            {/* Gradient overlays */}
             <div className="absolute inset-0 bg-linear-to-t from-background-page via-background-page/30 to-transparent" />
             <div className="absolute inset-0 bg-linear-to-r from-background-page/80 via-background-page/30 to-transparent" />
             <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-transparent" />
 
-            {/* Content overlay */}
             <div className="absolute left-8 lg:left-16 bottom-1/3 translate-y-1/2 max-w-xl z-10">
                 <div className="flex gap-2 mb-4">
                     {current.genre.slice(0, 2).map((g) => (
@@ -99,7 +99,6 @@ export function HeroSection({ featured }: HeroSectionProps) {
                 </div>
             </div>
 
-            {/* Rotation dots */}
             <div className="absolute right-8 lg:right-16 bottom-1/3 translate-y-1/2 flex flex-col gap-3 z-10">
                 {featured.map((item, idx) => (
                     <button
@@ -120,7 +119,7 @@ export function HeroSection({ featured }: HeroSectionProps) {
                 ))}
             </div>
 
-            <HeroProgressBar key={currentIndex} isPaused={isPaused} />
+            <HeroProgressBar key={animKey} isPaused={isPaused} />
         </div>
     );
 }

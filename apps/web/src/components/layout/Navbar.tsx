@@ -18,6 +18,7 @@ const Navbar = forwardRef<HTMLDivElement, NavbarProps>(({ scrolled }, ref) => {
 
     const navLinks = [
         { label: 'Home', path: ROUTES.HOME },
+        { label: 'Browse', path: '/browse' },
         { label: 'Movies', path: '/movies' },    // to be updated later
         { label: 'Series', path: '/series' },
         { label: 'Trending', path: '/trending' },

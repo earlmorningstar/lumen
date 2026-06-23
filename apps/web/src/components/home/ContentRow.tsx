@@ -1,8 +1,9 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Content } from '@lumen/core';
 import { ContentCard } from '@/components/content/ContentCard';
 import { ContentCardSkeleton } from '@/components/content/ContentCardSkeleton';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ContentRowProps {
     title: string;
@@ -26,6 +27,7 @@ export function ContentRow({
     onInfo,
 }: ContentRowProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [isHovered, setIsHovered] = useState(false);
 
     const scrollLeft = () => {
         scrollContainerRef.current?.scrollBy({ left: -SCROLL_AMOUNT, behavior: 'smooth' });
@@ -50,7 +52,6 @@ export function ContentRow({
 
     return (
         <div className="px-4 lg:px-8">
-            {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">{title}</h2>
                 {seeMoreLink && (
@@ -60,8 +61,11 @@ export function ContentRow({
                 )}
             </div>
 
-            {/* Scrollable row */}
-            <div className="relative group">
+            <div
+                className="relative"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
                 <div
                     ref={scrollContainerRef}
                     className="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory"
@@ -79,21 +83,34 @@ export function ContentRow({
                     ))}
                 </div>
 
-                {/* Scroll arrows – now using default group */}
-                <button
-                    onClick={scrollLeft}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                    aria-label="Scroll left"
-                >
-                    ‹
-                </button>
-                <button
-                    onClick={scrollRight}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                    aria-label="Scroll right"
-                >
-                    ›
-                </button>
+                <AnimatePresence>
+                    {isHovered && (
+                        <>
+                            <motion.button
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                onClick={scrollLeft}
+                                className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white rounded-full w-10 h-10 flex items-center justify-center z-20 shadow-lg"
+                                aria-label="Scroll left"
+                            >
+                                ‹
+                            </motion.button>
+                            <motion.button
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                onClick={scrollRight}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white rounded-full w-10 h-10 flex items-center justify-center z-20 shadow-lg"
+                                aria-label="Scroll right"
+                            >
+                                ›
+                            </motion.button>
+                        </>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

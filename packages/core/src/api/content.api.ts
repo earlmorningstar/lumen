@@ -67,3 +67,8 @@ export async function getContinueWatching(userId: string) {
     const { data } = await getApiClient().get(`/users/${userId}/continue-watching`);
     return data.data as ContentWithProgress[];
 }
+
+export async function getGenres() {
+    const { data } = await getApiClient().get('/content/genres');
+    return data as { data: { genre: string; count: number; thumbnailUrl: string }[] };
+}

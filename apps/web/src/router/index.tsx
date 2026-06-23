@@ -15,6 +15,7 @@ import {
     ProfilePage,
     WatchlistPage,
     DevTestPage,
+    BrowsePage,
 } from '@/pages/lazy';
 import { ROUTES } from './routes';
 
@@ -53,6 +54,14 @@ const router = createBrowserRouter([
                         element: (
                             <SuspensePage variant="player">
                                 <PlayerPage />
+                            </SuspensePage>
+                        ),
+                    },
+                    {
+                        path: '/browse',
+                        element: (
+                            <SuspensePage variant="page">
+                                <BrowsePage />
                             </SuspensePage>
                         ),
                     },

@@ -24,3 +24,25 @@ export async function getById(id: string) {
 export async function getTrending(limit = 20) {
     return contentRepo.findTrending(limit);
 }
+
+export async function getGenres() {
+    return contentRepo.findGenresWithCounts();
+}
+
+export async function search(q: string, page: number, limit: number) {
+    const { data, total } = await contentRepo.searchByQuery(q, limit, (page - 1) * limit);
+    return buildPaginatedResponse(data, total, page, limit);
+}
+
+export async function getByGenre(genre: string, page: number, limit: number) {
+    const { data, total } = await contentRepo.findByGenre(genre, limit, (page - 1) * limit);
+    return buildPaginatedResponse(data, total, page, limit);
+}
+
+export async function getRelated(id: string) {
+    return contentRepo.findRelated(id);
+}
+
+export async function incrementView(id: string) {
+    await contentRepo.incrementViewCount(id);
+}

@@ -1,6 +1,6 @@
-import { memo, useRef } from 'react';
+import { memo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Content } from '@lumen/core';
 import { queryClient } from '@/lib/queryClient';
 import { prefetchContent } from '@lumen/core';
@@ -26,14 +26,17 @@ export const ContentCard = memo(function ContentCard({
 }: ContentCardProps) {
     const navigate = useNavigate();
     const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const [isHovered, setIsHovered] = useState(false);
 
     const handleMouseEnter = () => {
+        setIsHovered(true);
         hoverTimer.current = setTimeout(() => {
             prefetchContent(queryClient, content.id);
         }, 300);
     };
 
     const handleMouseLeave = () => {
+        setIsHovered(false);
         if (hoverTimer.current) clearTimeout(hoverTimer.current);
     };
 
@@ -47,9 +50,9 @@ export const ContentCard = memo(function ContentCard({
 
     return (
         <motion.div
-            className="group relative shrink-0 rounded-lg overflow-hidden bg-background-card cursor-pointer"
+            className="relative shrink-0 rounded-lg overflow-hidden bg-background-card cursor-pointer"
             style={{ width: 200, ...style }}
-            whileHover={{ scale: 1.08, zIndex: 10 }}
+            animate={{ scale: isHovered ? 1.08 : 1, zIndex: isHovered ? 10 : 1 }}
             transition={{ duration: 0.15 }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -75,7 +78,19 @@ export const ContentCard = memo(function ContentCard({
                 }}
             />
 
-            <ContentCardOverlay content={content} onInfo={handleInfo} />
+            <AnimatePresence>
+                {isHovered && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute inset-0 z-10"
+                    >
+                        <ContentCardOverlay content={content} onInfo={handleInfo} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }, (prev, next) =>
